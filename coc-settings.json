@@ -1,0 +1,364 @@
+// The JSON standard requires double quotes and will not accept single quotes, nor will the parser.
+    // json里面
+    // inoremap <buffer>  ' "
+
+    // $LEO_TOOLS下的coc目录, 都是本地的内容, 别在机器间同步,
+
+
+
+{
+// outline
+    "outline.sortBy"        :  "position"      ,
+    "outline.expandLevel"   :  2               ,
+     "outline.splitCommand" :  "botright 45vs" ,
+// tree
+    "tree.closedIcon"       :  ""     ,
+    "tree.openedIcon"       :  ""     ,
+    "tree.key.toggle"       :  "f"     ,
+    "tree.key.collapseAll"  :  "F"     ,
+    "tree.key.activeFilter" :  "<M-/>" ,
+
+// 自动补全 (suggest),   Configuring sources:所有都在这里了
+    // "coc.source.{name}.enable": controls if the source is enabled.
+    // "coc.source.{name}.shortcut": shortcut used in completion menu.
+    // "coc.source.{name}.priority": 100
+    // "coc.source.{name}.disableSyntaxes": syntax names used to disable source from completion, eg: ["comment", "string"]
+    // "coc.source.file.trimSameExts": Filename extensions to trim extension names on file completion, default [".ts", ".js"]
+    // "coc.source.file.ignoreHidden": Ignore completion for hidden files, default true.
+    "coc.source.emoji.triggerCharacters" : ["<M-q>"],
+    "coc.source.vimtex.filetypes"        : ["tex", "plaintex", "latex", "aux"],
+    "coc.source.vimtex.enable"           : true ,
+    "coc.source.vimtex.priority"         : "120" ,
+
+
+    "coc.source.omni.enable"             : true ,
+    "coc.source.omni.priority"           : "3"  ,
+    "coc.source.omni.shortcut"           : "X"  ,
+    "coc.source.omni.filetypes"          : ["help", "txt", "man" ] ,
+    // "coc.source.omni.filetypes"          : ["help", "txt", "man", "tex"] ,
+
+    // "coc.source.buffer.firstMatch" : true, // Filter complete items by first letter strict match, default true.
+
+  // 这2个改了没变化
+    "coc.source.tag.shortcut"             : "标签",
+    "coc.source.file.shortcut"            : "文件",
+    "coc.source.buffer.shortcut"          : "缓存",
+    "coc.source.around.shortcut"          : "本",
+    "coc.source.lsp.shortcut"             : "服",
+    "coc.source.dictionary.shortcut"      : "典",
+    "coc.source.word.shortcut"            : "万词", 
+    "coc.source.yank.shortcut"            : "粘",  // 貌似改不了
+    "yank.shortcut"                       : "粘",  // 貌似改不了
+    "yank.enableCompletion"               : true,
+
+
+    "yank.limit"              : 3,  // Max completion item count from yank history.
+    // Max items count for source priority:
+        // lower than `90`.
+        "suggest.lowPrioritySourceLimit": 2,
+
+         // bigger than or equal to `90`.
+        "suggest.highPrioritySourceLimit":4,
+
+
+
+    "coc.source.tag.priority"             : 112,
+    "yank.priority"                       : 111,
+    "coc.source.lsp.priority"             : 110,  // LS是languageSource, 这个是LSP, 与语言无关?
+    "coc.source.file.priority"            : 92,  // 需要时直接ctrl F
+    "coc.source.around.priority"          : 99,
+    "coc.source.buffer.priority"          : 98,
+    "coc.source.dictionary.priority"      : 99,
+    "coc.source.snippets.priority"        : 199,
+    "coc.source.snippets-source.priority" : 199,
+    "suggest.languageSourcePriority"      : 199,
+        // 统一管理了vimlsp等.
+        // 不能这么fine grained地设置
+            // "coc.source.vimlsp.priority"  : 1,
+            // "coc.source.json.shortcut"    : "js",
+
+
+    "coc.source.buffer.ignoreGitignore"   : true,  // Ignore git ignored files for buffer words, default true.
+    "coc.source.file.ignorePatterns"      : [], //Ignore patterns of matcher module, default [].
+
+    // coc.nvim as LSP client.
+    "languageserver": {
+        "efm": {
+            "command": "efm-langserver",
+            "args": [],
+            // custom config path
+            // "args": ["-c", "/path/to/your/config.yaml"],
+            "filetypes": ["vim",  "markdown", "yaml"]
+        },
+        // "vimls": {  // 有了他就不用设了?  // CocInstall coc-vimlsp  },
+    },
+
+
+// tabnine
+    // 敲Tabnine::config,  gui连浏览器, 改更多配置:
+
+    "tabnine.shortcut"           :"",
+    "tabnine.triggers"           : [] ,  // Trigger characters of Tabnine source.
+    "tabnine.priority"           :105,
+    "tabnine.disable_filetypes"  : [] ,
+    "tabnine.disable_file_regex" : [] ,
+        // Disable Tabnine when the file path contains
+        // a match of any of the provided regexes. For example, add "[.]js\$" to disable Tabnine in JavaScript files.
+    "tabnine.disable_line_regex" : [] ,
+        // Disable Tabnine when the current line contains a match of any of the provided regexes.
+        // For example,
+            // add  "require" to disable Tabnine when the current line contains the word require. 
+
+// coc.preferences
+
+    "coc.preferences.colorSupport" :  true                                   ,
+    "coc.preferences.rootPatterns"           :[".git",  ".projections.json"] ,
+    "coc.preferences.enableMessageDialog"    :true                           ,
+    "coc.preferences.useQuickfixForLocations":true                           ,
+    "coc.preferences.extensionUpdateCheck"   :"weekly"                       ,
+    "coc.preferences.snippetHighlight"       :true                           ,
+        // Use highlight group 'CocSnippetVisual' to highlight placeholders with same index of current one.
+    "coc.preferences.jumpCommand"      :"-tab drop",
+    "coc.preferences.enableMarkdown"         :true                               ,
+    "coc.preferences.snippetStatusText"      :"开了CocSnippet"                   ,
+        // Text shown in 'statusline' to indicate snippet session is activate.
+        // Check |coc-status| for statusline integration.
+    // "coc.preferences.semanticTokensFiletypes": [],
+
+
+// vimlsp:  // 依赖于:Cocinstall coc-vimlsp
+    "vimlsp.shortcut"                   :"V",
+    "vimlsp.indexes.runtimepath"        :true,
+     // count of files index  at the same time, 越大越耗cpu
+    "vimlsp.indexes.count"              :3,  //
+     // time gap between parse file, 越小越耗cpu
+    "vimlsp.indexes.gap"                :100,
+    "vimlsp.indexes.projectRootPatterns":[".git", "nvim"],  // "Names of files used as the mark of project root."
+    "vimlsp.debug"                       : false,
+    "vimlsp.diagnostic.enable"          :true,
+    "vimlsp.suggest.fromRuntimepath"    :true,  // complete items from runtimepath's vim files,
+                                                // if this is true,
+                                                     // then this is true:
+                                                    // "vimlsp.suggest.fromVimruntime"
+    // "vimlsp.trace.server"       // "description": "Trace level of vim language server"
+        // 没懂 所以没用:
+
+// timeout相关
+// 为了解决  经常报这个:
+    // Parse file:///home/wf/dotF/cfg/nvim/after/syntax/complex_coneal_tex.vim error:
+    // Timeout: 50000ms
+    // 还有好多
+    "suggest.timeout"                        :  15000 ,
+    "coc.preferences.willSaveHandlerTimeout" :  15000 ,
+    "suggest.triggerCompletionWait"          :  233   , // 这也是millisec ?
+
+// signature
+    "signature.hideOnTextChange"             :  true  ,
+    "signature.triggerSignatureWait"         :  1000  ,
+            // Timeout for signature request trigger (milliseconds),
+            // default: `500`.
+            // Change to higher value for slow Language Servers.
+
+// suggest
+    "suggest.virtualText"             :  true           ,
+    "suggest.minTriggerInputLength"   :  1              ,
+    "suggest.detailMaxLength"         :  90             ,
+    "suggest.noselect"                :  true           ,
+    "suggest.enablePreselect"         :  true           ,
+    "suggest.selection"               :  "recentlyUsed" ,
+    "suggest.triggerAfterInsertEnter" :  true           ,
+    "suggest.autoTrigger"             :  "always"       ,
+    "suggest.detailField"             : "preview",
+    "suggest.snippetIndicator"        : " ",  // 有了下面这个, Indicator最好设为空格? "snippet"       : "",
+    "suggest.removeDuplicateItems"    : true,
+    "suggest.echodocSupport"          : true,
+    "suggest.completionItemKindLabels": {
+        "snippet"       : "",
+        "value"         : "值",
+        "class"         : "C",
+        "color"         : "色",
+        "constant"      : "常",
+        "default"       : " ",
+        "enum"          : "枚举",
+        "enumMember"    : "枚举成员",
+        "event"         : "事件",
+        "field"         : "域",
+        "file"          : "文件",
+        "folder"        : "目录",
+        "function"      : "f",
+        "interface"     : "界面",
+        "keyword"       : "关键字",
+        "method"        : "",
+        "module"        : "",
+        "operator"      : "Op",
+        "property"      : "",
+        "reference"     : "ReferencE",
+        "struct"        : "结构体",
+        "text"          : "文本",
+        "typeParameter" : "类型参数",
+        "unit"          : "单元"
+    },
+// snippet
+    // 加了snippet这一堆, 导致报错:
+         // [coc.nvim] TypeError: dirs.map is not a function
+         // 来自:
+         // ~/d/leo_tools/coc/extensions/node_modules/coc-snippets
+    "snippets.priority"              :  101,
+    "snippets.editSnippetsCommand"   :  "-tab drop",
+    // 路径
+        "snippets.userSnippetsDirectory": "$nV/snippets",
+            // directories that searched for snippet files,
+            // could be subfolder in every $runtimepath or absolute paths,
+        "snippets.ultisnips.directories":  ["$HOME/dotF/cfg/nvim/ulti-snipPets-coc_leo"],    // 和上一行的区别?
+    "snippets.autoTrigger"    :true,
+    "snippets.ultisnips.trace":true,
+    "snippets.snipmate.trace" :true,
+            // /home/wf/dotF/cfg/nvim/snippets/zsh.snippets
+                                            // vim.snippets
+            // https://www.cnblogs.com/litifeng/p/5658587.html
+            // ${0}有特殊意义，代表最后一跳的意思，${0}之后<TAB>键恢复正常。
+
+
+    // 高级折腾 先放着:
+        // snippets.snipmate.author: author name used for g:snips_author
+        // snippets.trace: Trace level of snippets channel.
+        // snippets.excludePatterns: List of ¿filepath patterns ¿ to exclude,
+            // $HOME and other environment variables are expanded.
+
+        // "snippets.triggerCharacters": "`",
+            // trigger characters for completion, default [].
+
+        // snippets.extends: extends filetype's snippets with other filetypes, example:
+            // {
+            //   "cpp": ["c"],
+            //   "javascriptreact": ["javascript"],
+            //   "typescript": ["javascript"]
+            // }
+
+// 诊断/diagnostic/纠错:
+        "pullDiagnostic.onSave"        : true,
+
+        "diagnostic.virtualText"       : false,  // 代码没写完时 老是遮挡干扰
+        "diagnostic.virtualTextWinCol" : 50,
+        "diagnostic.virtualTextPrefix" : "诊断:",
+        "diagnostic.displayByAle"      : true,
+
+        "diagnostic.highlighLimit"     : 1,
+        "diagnostic.highlightPriority" : 100,
+        "diagnostic.enableSign"        : true,
+        // "diagnostic.enableSign"       :false,
+        "diagnostic.level"            :"error", // 默认是hint
+        "diagnostic.messageDelay"     :8000, //毫秒
+        "diagnostic.messageTarget"    :"echo",
+
+        "diagnostic.errorSign"        :"错",
+        "diagnostic.warningSign"      :"  ",  //有点烦人, 就让它变为空格, 不在sign栏显示
+        "diagnostic.infoSign"          : "信",
+        "diagnostic.hintSign"         :"提",
+        "diagnostic.enableMessage"    :"jump",  // 鼠标移到报错/提醒处, 显示具体信息
+        "diagnostic.refreshOnInsertMode": true,
+
+        // "diagnostic.checkCurrentLine": true,  显示该行任意位置的错误. 不利于定位行内错误?  
+
+    // diagnostic-languageserver
+        "diagnostic-languageserver.filetypes": {
+            "vim"      : "vint",
+            "markdown" : [ "write-good", "markdownlint" ],
+            "sh"       : "shellcheck",
+            "yaml"     : [ "yamllint" ]
+            // "cmake"    : [ "cmake-lint", "cmakelint" ],
+            // "email"    : "languagetool",
+            // "elixir"   : ["mix_credo", "mix_credo_compile"],
+            // "eelixir"  : ["mix_credo", "mix_credo_compile"],
+            // "php"      : ["phpstan", "psalm"],
+            // "systemd"  : "systemd-analyze"
+            },
+        "diagnostic-languageserver.formatFiletypes": {
+            "python": ["black", "isort"],
+            // "blade": "blade-formatter",
+            // "cmake": "cmake-format"
+            "lua": "lua-format",
+            "sh": "shfmt"
+            },
+            "git.enableGutters": false, 
+
+// python
+
+    "python.analysis.useLibraryCodeForTypes":true,
+    "python.analysis.typeCheckingMode"      :"basic",
+                    // 设为strict, 好像要声明int float等type
+                    // 这样定义变量就会报错: FP = FP1 + FP2
+    "python.analysis.diagnosticMode"        :"openFilesOnly",
+    "python.analysis.autoImportCompletions" :true,
+
+    // 被ale代替了:
+        // "python.linting.enabled"                :true,  // 改了没动静
+        // "python.linting.flake8Enabled"          :true,  // 改了没动静
+        // "python.linting.lintOnSave"             :true,
+        // "python.linting.pylintEnabled"          :true,
+        // "python.linting.maxNumberOfProblems"    :6,
+        // // "python.linting.flake8Args": ["--ignore=E303,E402,E401,E202"],
+        // "python.linting.flake8Path":            "/home/linuxbrew/.linuxbrew/bin/flake8",
+        // // Flake8 supports storing its configuration in the following places:
+        //     // Your top-level user directory
+        //     // In your project in one of setup.cfg, tox.ini, or .flake8
+        // // 详见全局设置: /home/wf/.config/flake8
+        // // 有时上述文件不生效,要在project所在目录放一个tox.ini, 内容同上也可
+        // // "python.linting.flake8CategorySeverity.E":
+        //
+        // // pylance对标jedi, 但coc只能装pylance的subset: pyright
+        // // pylance貌似很强,但nvim里用jedi吧, 去年还有更新
+        // // pylance: 名字由来:lanclot 兰斯洛特
+        //
+        // pylint和flake8类似吧
+
+    "jedi.enable": true,
+        // pyright还不成熟, 问题很多?
+
+            // Vim/neovim users can install coc-pyright
+                // Alternatively,
+                // ALE will automatically check your code with Pyright,
+                // without requiring any additional configuration.
+
+                // Note:
+                // if can't detect project root correctly,
+                    // Pyright may not work as expected
+
+            // 如何像vscode那样, 跳到import进来的conda包?
+
+            // "pyright.enable": true,  // 它要是关了, flake8也用不了
+            // "pyright.disableDiagnostics": false,  // 禁用pyright的检查, 用flake8的?
+
+// list
+    // "list.previewToplineStyle" : "middle",
+
+
+// yank clipboard
+    "yank.list.maxsize"       : 100,
+    // help等buffer 无法highlight, 用要官方的lua的highlight吧
+        // "yank.highlight.enable"   : true,
+        // "yank.highlight.duration" : 100,
+
+// translator
+    "translator.enableHover": false,
+    // "translator.enableHover": true,
+    "translator.engines" : ["bing","youdao"],
+    // "translator.engines" : ["google","youdao"],  //加了反而不行: "translator.proxy": "socks5://219.xxxxxxxxxxxxxxx",
+
+        // Work with translation lists
+            // run `:CocList translation` to open the translation list.
+            // - Filter your translation items and perform operations via `<Tab>`
+            // - Use operation `delete` to delete the translation item under the cursor
+            // - Use operation `yank` to yank ...
+            // - Use operation `jumpto` to jump to the location where you've performed translating
+            // - Use operation `append` to append the word to the end of cursor position
+            // - Use operation `pretend` to pretend ...
+
+        // star比较多,待阅: https://github.com/skywind3000/translator
+// lua lsp
+    "Lua.workspace.preloadFileSize" : 1200, 
+
+}
+     
+// vim:ft=jsonc:syntax=jsonc
+

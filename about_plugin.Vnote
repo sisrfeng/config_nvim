@@ -1,0 +1,144 @@
+1. 我的&runtimepath
+    /home/wf/.config/nvim
+    /home/wf/.local/share/nvim/PL/vim-plug
+    /home/wf/.local/share/nvim/PL/vim-translator
+    /home/wf/.local/share/nvim/PL/tabline.vim
+    /home/wf/.local/share/nvim/PL/vim-matchup
+    /home/wf/.local/share/nvim/PL/vim-easy-align
+    /home/wf/.local/share/nvim/PL/vim-solarized8
+    /home/wf/.local/share/nvim/PL/vim-markdown
+    /home/wf/.local/share/nvim/PL/nerdtree
+    /home/wf/.local/share/nvim/PL/blamer.nvim
+    /home/wf/.local/share/nvim/PL/vim-lucius
+    /home/wf/.local/share/nvim/PL/coc.nvim
+    /home/wf/.local/share/nvim/PL/easymotion_ori
+    /home/wf/.local/share/nvim/PL/vim-easymotion
+    /home/wf/.local/share/nvim/PL/vim-pairs
+    /home/wf/.local/share/nvim/PL/vim-sandwich
+    /home/wf/.local/share/nvim/PL/nerdcommenter
+    /home/wf/.local/share/nvim/PL/LeaderF
+    /home/wf/.local/share/nvim/PL/toggle-bool
+    /home/wf/.local/share/nvim/PL/undotree
+    /home/wf/.local/share/nvim/PL/far.vim
+    /home/wf/.local/share/nvim/PL/linediff.vim
+    /home/wf/.local/share/nvim/PL/diffchar.vim
+
+    /etc/xdg/nvim
+        这个目录还未创建
+
+    /home/wf/.local/share/nvim/site
+        Data home directory, for plugins installed by user.
+        有这个:site/autoload/vim-plug
+
+        " autoload/    存放automatically loaded scripts
+    /usr/local/share/nvim/site
+        /usr/share/nvim/site
+        system administrators are  expected to `install site` plugins to /usr/share/nvim/site
+
+    /home/wf/.local/share/nvim/PL/vim-polyglot
+
+    /home/linuxbrew/.linuxbrew/Cellar/neovim/0.6.1/share/nvim/runtime
+    /home/linuxbrew/.linuxbrew/Cellar/neovim/0.6.1/lib/nvim
+
+    /home/wf/.local/share/nvim/PL/vim-polyglot/after
+    /usr/share/nvim/site/after
+    /usr/local/share/nvim/site/after
+    /home/wf/.local/share/nvim/site/after
+    /etc/xdg/nvim/after
+
+    /home/wf/.local/share/nvim/PL/vim-matchup/after
+    /home/wf/.local/share/nvim/PL/vim-markdown/after
+    /home/wf/.local/share/nvim/PL/vim-sandwich/after
+    /home/wf/.config/nvim/after
+
+            1.1 关于after
+            *after-directory*
+            In after/ 子目录 of 1, 2, 3 and 4, with reverse  ordering.
+            This is for preferences to overrule or add to the  distributed defaults or system-wide settings (rarely needed).
+
+                1. Your home directory, for personal preferences.
+                Given by `stdpath("config")`.  |$XDG_CONFIG_HOME|
+                2. Directories which must contain configuration files according to
+                |xdg| ($XDG_CONFIG_DIRS, defaults to /etc/xdg).  This also contains
+                preferences from system administrator.
+                3. Data home directory, for plugins installed by user.
+                Given by `stdpath("data")/site`.  |$XDG_DATA_HOME|
+                4. nvim/site subdirectories for each directory in $XDG_DATA_DIRS.
+                This is for plugins which were installed by system administrator,
+                but are not part of the Nvim distribution. XDG_DATA_DIRS defaults
+                to /usr/local/share/:/usr/share/, so system administrators are
+                expected to install site plugins to /usr/share/nvim/site.
+
+
+2.  package
+
+    The  advantages over normal plugins:
+    - A package can be downloaded as an archive and unpacked in its own directory.
+    Thus the files are not mixed with files of other plugins.  That makes it
+    easy to update and remove.
+    - A package can be a git, mercurial, etc. repository.  That makes it really
+    easy to update.
+    - A package can contain multiple plugins that depend on each other.
+    - A package can contain plugins that are automatically loaded on startup and
+    ones that are only loaded when needed with `:packadd`.
+
+3.  *autoload-functions*
+
+    3.1 个人理解:
+	:autocmd FuncUndefined Wf_func* source ~/wf.vim
+    The file "~/wf.vim" should then define functions that start with
+    "Wf_func".  Also see |FuncUndefined|.
+
+    When writing Vim scripts:
+        you'd better use an autoloaded function
+
+    3.2 autoload目录
+
+    ~/.vim/autoload在nvim下, 是 ~/.local/share/nvim/site/autoload吧
+
+    When such a function is called, and it is not defined yet,
+    Vim will search the  "autoload" directories in 'runtimepath' for a script file called  filename.vim".
+    "That file should then define the function like this: >
+
+        function filename#funcname()
+        echo "Done!"
+        endfunction
+
+        例子:
+            我的init.vim里有:
+                call plug#begin()
+            ~/.local/share/nvim/site/autoload/plug.vim里有:
+                function! plug#begin(...)
+                if a:0 > 0
+                endfunction
+
+        It is possible to use subdirectories.  Every # in the function name works like
+        a path separator.  Thus when calling a function: >
+
+            :call foo#bar#func()
+
+        Vim will look for the file "autoload/foo/bar.vim" in 'runtimepath'.
+
+
+4. 关于map
+
+  silent! nmap <unique> sr <Plug>(sandwich-replace)
+               <unique> 表示   the command will fail,  if the mapping or  abbreviation already exist
+                               插进中这么写, 避免覆盖掉用户自己的map?
+
+
+vim-sandwich里的貌似失败的尝试
+            " nmap <silent> td <Plug>(operator-sandwich-delete)<Plug>(operator-sandwich-release-count)<Plug>(textobj-sandwich-query-a)
+            " nmap <silent> tr <Plug>(operator-sandwich-replace)<Plug>(operator-sandwich-release-count)<Plug>(textobj-sandwich-query-a)
+            " nmap <silent> tdb <Plug>(operator-sandwich-delete)<Plug>(operator-sandwich-release-count)<Plug>(textobj-sandwich-auto-a)
+            " nmap <silent> trb <Plug>(operator-sandwich-replace)<Plug>(operator-sandwich-release-count)<Plug>(textobj-sandwich-auto-a)
+            " DEBUG: easymotion发疯来这里
+
+            " xnoremap sd <Plug>(operator-sandwich-delete)
+            " xnoremap sr <Plug>(operator-sandwich-replace)
+            "
+            " nmap trt     <Plug>(operator-sandwich-replace)<Plug>(operator-sandwich-release-count)<Plug>(textobj-sandwich-auto-a)
+            " 默认的是srb
+                " 1. silent! nmap <unique> srb <Plug>(sandwich-replace-auto)
+                " 2. nmap <silent> <Plug>(sandwich-replace-auto) <Plug>(operator-sandwich-replace)<Plug>(operator-sandwich-release-count)<Plug>(textobj-sandwich-auto-a)
+

@@ -1,0 +1,109 @@
+vim:ft=help           
+" 取代了这些： " set nobackup  取消备份。 视情况自己改
+" set noswapfile  关闭交换文件
+
+
+This plugin mitigates Vim's inconvenient swapfile behaviour by only creating a swapfile when we actually modify a buffer.
+
+Vim's default 'swapfile' behaviour can be annoying because:
+
+    - Vim creates a swapfile for every open file, even if you haven't edited it.
+
+    - If your machine crashes or reboots without closing Vim tidily, all these
+        swapfiles will be left on disk.
+
+    - When you edit a file with a swapfile present, it is difficult to determine
+        which is the copy you desire.  Vim doesn't even check if they are
+        identical!  (See |alternatives|)
+
+
+Some people turn 'swapfile' off,
+but then they lose the ability to recover unsaved work if their machine loses power.
+ 
+
+To monitor the behaviour of this plugin,
+you can set g:Ns_Debug,
+but that can interrupt your workflow with "Press ENTER" messages.
+
+
+
+A friendlier way to monitor
+whether a swapfile is currently being used,
+is to add an indicator to your statusline.
+
+
+   " Do this first if you don't have a custom 'statusline'
+   :set statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+
+   :let &statusline = substitute(&statusline, '%=', '%{ \&swapfile ? " swap" : "" }%=', '')
+
+ Alternative solutions:                                        *alternatives*
+
+ - Christian Brabandt's recover.vim plugin can automatically recover
+   swapfiles for you.
+
+   (I have an adapted version that will delete the swapfile if it is found to
+   be identical.)
+
+- My diff_against_file_on_disk.vim plugin has a :DiffSplitAgainstFileOnDisk command which makes it easy to check if your current (recovered) buffer
+  matches the most recent file.
+  There are minor complications when using this script alongside recover.vim
+
+ - We don't want to set swapfile on BufReadPre because we are still on the
+   previous buffer (the one we are about to "hide"), so that would create an
+   unwanted swapfile.
+
+ - But if swapfile isn't set then, recover.vim won't be able to do its magic
+   immediately when we open the file.  Setting 'swapfile' on BufReadPost is
+   too late for recover.vim!
+
+ I tried to munge recover.vim to work even if 'swapfile' was not set, but
+ that didn't work smoothly either.
+
+
+
+=== Options ===
+
+g:Ns_Enabled:
+Allows plugin to be enabled/disabled from config,
+or disabled at runtime.
+
+        let g:Ns_Enabled = get(g:, 'Ns_Enabled', 1)
+
+g:Ns_CloseSwapfileOnWrite:
+    Disable this (set to 0) if you are in an edit-save-edit-save workflow and
+    want there to be fewer disk writes.
+    Disabling will prevent removing/recreating the swapfile,
+    but it might leave unwanted swapfiles on disk!
+
+    Disabling is appropriate if:
+
+     - you want to reduce power consumption
+     - you are saving onto a slow filesystem (network based, USB, SD card or
+       floppy disk)
+     - you are editing huge files.
+
+        let g:Ns_CloseSwapfileOnWrite = get(g:, 'Ns_CloseSwapfileOnWrite', 1)
+
+     g:Ns_CheckSwapfileOnLoad: When opening a file for the first time,
+     will `:set swapfile` to force Vim to check if there is a swapfile present
+     for that file.
+
+    let g:Ns_CheckSwapfileOnLoad = get(g:, 'Ns_CheckSwapfileOnLoad', 1)
+
+     g:Ns_CreateSwapfileOnInsert: Create a swapfile immediately when you
+     enter Insert mode.
+
+     Advantages:
+
+     - If you do a long edit without leaving insert mode, your changes will be
+       safely stored in the swapfile.
+
+     Disadvantages:
+
+     - If a swapfile is present, you may be interrupted while entering insert
+       mode, when you were just about to type something!
+
+       This can be avoided by setting g:Ns_CheckSwapfileOnLoad.
+DIY_again
+DIY_2  vim:filetype=help:syntax=help:

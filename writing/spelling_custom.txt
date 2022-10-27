@@ -1,0 +1,45 @@
+# Add terms here that should be accepted by the LanguageTool spell checker,
+# one word or phrase per line
+
+ImageNet
+A-BadMinTons
+FrogNet
+aBadmin
+LabelMe
+TrackNet
+discriminancy
+FasterRCNN
+Chiao Tung
+Chiao
+Tung
+Tsì-Uí
+Tsì-Uí İk
+İk
+VGG-based
+upsampling
+DeconvNet
+binarization
+a channel-wise manner
+IoU
+T-RexNet
+Mish
+ReLU
+softmax
+ReMixMatch
+FixMatch
+RandAugment
+TPUs
+transductive
+STAC
+Adadelta
+Okuhara 
+Ohori
+bilibili
+binarized
+CornerNet
+ExtremeNet
+CenterNet
+RepVGG
+VGG-like
+conv
+csv

@@ -1,0 +1,16 @@
+" if did_filetype()
+"   " filetype already set..
+"     finish                " ..don't do these checks
+" endif
+"
+" let last_line = getline(line('$'))
+"
+" if last_line =~  'vim:filetype=help'
+"     setfiletype help  " override the default rules in  $VIMRUNTIME/scripts.vim
+" elseif last_line =~? 'vim:filetype=man'
+"     setfiletype man
+" elseif last_line =~? 'vim:filetype=markdown'
+"     setfiletype markdown
+" endif
+"
+"

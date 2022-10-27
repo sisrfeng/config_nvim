@@ -1,0 +1,1296 @@
+这个文件没被source， 仅作为采坑笔记
+
+新内容往下面放
+
+        " https://github.com/vim/vim/issues/6793
+        " Register % contains the name of the current file.
+        " 这3行结果貌似一样, expand和fnamemodify只有细微区别？
+        " let $no_vscode = expand('%:h') . "/no_vscode.vim"
+        " let $no_vscode = fnamemodify('%',':h') . "/no_vscode.vim"
+
+
+
+
+- expand/扩展/识别 文件名
+        都不行:
+        " let $has_vscode = fnamemodify($MYVIMRC,':h') . "/has_vscode.vim"
+        " let $has_vscode = expand('%:h') . "/has_vscode.vim"
+        " let $has_vscode = fnamemodify('%',':h') . "/has_vscode.vim"
+
+
+        " echom 'has_vscode找到了吗'
+        " echom $has_vscode
+
+- autocmd
+        " 错误的根源:  作为autocmd的{pat},  ~ 无法expand为家目录 (但echo $no_vscode时又可以）
+        let $no_vscode = "~/dotF/cfg/nvim/no_vscode.vim"
+
+        " Note that special characters (e.g., "%", "<cword>") in the ":autocmd"
+        " arguments are not expanded when the autocommand is defined.
+        " These will be  expanded when the Event is recognized, and the {cmd} is executed.
+        " The only  exception is  "<sfile>"
+        "
+        "
+        怎么发现的？
+
+        :augroup wf_reload ， 输出的结果发现， 想要的autocmd定义成功, {pat}是：~/dotF/cfg/nvim/no_vscode.vim
+
+        " let no_vscode = 'hihi'
+        " XX 和 $XX 可以独立，看看echo $XX 和 echo XX
+        "
+        " let no_vscode = 'hihi'
+        " XX 和 $XX 可以独立，看看echo $XX 和 echo XX
+
+        " 最终成功的关键一行
+        autocmd wf_reload BufWritePost $no_vscode  ++nested   source $MYVIMRC |  echom 'hi'
+
+        " 没那么好：
+        autocmd wf_reload BufWritePost no_vscode.vim  ++nested   source $MYVIMRC |  echom 'hi1'
+        autocmd wf_reload BufWritePost *no_vscode.vim  ++nested   source $MYVIMRC |  echom 'hi2'
+
+        " 其他想法
+        " " 这3个都不行
+        " autocmd wf_reload BufWritePost no_vscode   echom '你看'
+        " autocmd wf_reload BufWritePost $no_vscode  echom '你看'
+        " autocmd wf_reload BufRead     $no_vscode  echom '你看'
+        " autocmd wf_reload BufRead    *no_vscode.vim       echom '你看'
+        " autocmd wf_reload BufWritePost     $no_vscode       echom ' 能识别了：  $no_vscode （环境变量）'
+        " The environment variable is expanded when the autocommand is defined, not when
+        " the autocommand is executed.  This is different from the command!
+
+        " 明明别人都说行的啊 https://vi.stackexchange.com/questions/28110/can-i-use-a-variable-in-autocmd-pat
+        " 而且最后这行也成功了啊：
+        " source $in_vscode
+        " 这样可以
+        " autocmd wf_reload BufWritePost no_vscode.vim  echom "你看, 能识别$no_vscode:" | echom $no_vscode | echom ' '
+        " todo https://vi.stackexchange.com/questions/6830/putting-the-value-of-an-argument-into-part-of-a-regex-in-vimscript
+
+        " todo: 改成在rc.zsh里定义$no_vscode ?
+        "
+        "
+        "
+        " ++nested ，老版本中是nested
+                    " Problem:    Making an autocommand trigger once is not so easy.
+                    " Solution:   Add the ++once argument.  Also add ++nested as an alias for
+                                "nested". (Justin M. Keyes, closes #4100)
+
+
+        " `:autocmd` adds to the list of autocommands regardless of whether they are
+                " already present.  When your .vimrc file is sourced twice, the autocommands
+                " will appear twice.  To avoid this, define your autocommands in a group, so
+                " that you can easily clear them:
+                "
+        autocmd BufWritePost *dotF/cfg/nvim/** source %   | echom "更新了"."init.vim系列 "| redraw
+        代替了:
+                                                                                        " 点号拼接字符串
+        " autocmd Reload BufWritePost $MYVIMRC    ++nested   source $MYVIMRC | echom "更新了"."init.vim "| redraw
+        " autocmd Reload BufWritePost $no_vscode  ++nested   source $MYVIMRC | echom '根据环境变量，改了no_vscode.vim, 加载了init.vim' | redraw
+        " autocmd Reload BufWritePost $has_vscode  ++nested  source $MYVIMRC | echom '(改了has_vscode.vim, 更新init.vim)'  | redraw
+
+
+
+        " When a function by this name already exists and [!] is
+        " not used an error message is given.  There is one
+        " exception: When sourcing a script again, a function
+        " that was previously defined in that script will be
+        " silently replaced.
+        " When [!] is used, an existing function is silently
+        " replaced.  Unless it is currently being executed, that
+        " is an error.
+        " NOTE: Use ! wisely.  If used without care it can cause
+        " an existing function to be replaced unexpectedly,
+        " which is hard to debug.
+
+        " 改了 beautify_wf并保存后， 保存init.vim会说function already exist
+        " 些别想着避免这个问题，毕竟很少改init.vim以外的文件.
+        " https://github.com/xolox/vim-reload
+
+-  " 禁用netrw，不过应该用不着了。我删掉了对应文件
+        " let g:loaded_netrw       = 1
+        " let g:netrw_banner=0
+        " let g:loaded_netrwPlugin = 1
+
+
+
+-  " " 竖着分屏打开help
+        " augroup my_filetype_settings
+        "     autocmd!
+        "     " winnr: 当前window的编号，top winodw是1
+        "     " $  表示 last window
+        "     autocmd FileType help if winnr('$') > 2 | wincmd K | else | wincmd L | endif
+        "     augroup end
+
+        " 1.4 LISTING MAPPINGS                  *map-listing*
+        " When listing mappings the characters in the first two columns are:
+
+        "       CHAR    MODE    ~
+        "      <Space>  Normal, Visual, Select and Operator-pending
+        "     n Normal
+        "     v Visual and Select
+        "     s Select
+        "     x Visual
+        "     o Operator-pending
+        "     ! Insert and Command-line
+        "     i Insert
+        "     l ":lmap" mappings for Insert, Command-line and Lang-Arg
+        "     c Command-line
+        "     t Terminal-Job
+        "
+        " Just before the {rhs} a special character can appear:
+        "     * indicates that it is not remappable
+        "     & indicates that only script-local mappings are remappable
+        "     @ indicates a buffer-local mapping
+
+
+" *i_CTRL-X* *insert_expand*
+        " CTRL-X enters a sub-mode where several commands can be used.  Most of these
+        " commands do keyword completion; see |ins-completion|.
+
+
+        " no help for <C-X>
+        " no help for CTRL-X CRTL-O
+        " 这样才行：
+        " h i_CTRL-X
+
+
+" ms-windows
+        " 这样可以 不那么死板地 只能用~/AppData/Local/nvim/init.vim来进入windows的nvim, 从而管理插件(
+        " windows的nvim和vscode的nvim共用):
+        "nvim -u '\\wsl$\Ubuntu\root\dotF\.config\nvim\init.vim'
+        " 插件位置:
+        " C:\Users\noway\AppData\Local\nvim-data
+        " 把wsl下的dotfile发送快捷方式到 ~/AppData/Local/nvim/init.vim , 不行.因为shortcut和软链接还不一样
+        " https://superuser.com/questions/253935/what-is-the-difference-between-symbolic-link-and-shortcut
+
+
+" Return to last edit position when opening files
+        " autocmd BufReadPost * normal! g`"zv
+        " 有bug:
+        "  normal! 表示 Execute Normal mode commands,
+        "  [!] :  mappings will not be used.
+        "  g`"表示 跳到 the last known position in a file
+        "  zv 取消折叠光标所在行
+        " 如果: the file is truncated outside of vim, and vim's mark is on a line that no longer exists, vim throws an error. Fixed that with:
+        " autocmd BufReadPost * silent! normal! g`"zv
+        " 或者:
+
+
+" 这么写比较啰嗦：
+"
+" let s:beauty_path = fnamemodify($MYVIMRC, ":p:h") . "/look外观.vim"    " 字符串concat，用点号
+" exe 'source ' . s:beauty_path      " 这样不行： source  . s:beauty_path
+
+set virtualedit=insert,block
+有了上面那行, 就不需要要了?  :
+
+" toggle virtualedit
+    let s:anywhere = 0
+    func! Cursor_anywhere_01()
+        if s:anywhere == 0
+            set virtualedit=all # 会导致光标跳转不舒服
+            let s:anywhere = 1
+        else
+            set virtualedit=
+            let s:anywhere = 0
+        endif
+    endfunc
+
+    nnoremap <Leader>aw :call Cursor_anywhere_01()<cr>
+    nnoremap <Leader>ji :call Cursor_anywhere_01()<cr>ji
+
+
+register/复制粘贴
+            " has({feature}  Returns 1 if {feature} is supported, 0 otherwise
+            " 对比:
+            " exists({expr})	The result is a Number, which is |TRUE| if {expr} is  defined, zero otherwise.
+            " For checking if a file exists use |filereadable()|.
+        if has('clipboard')  " 确认|clipboard| provider is available  (所以前面说  要先写好 g:clipboard  ??
+                                " 此'clipboard'是一个pseudo feature名, 不是g:clipboard这个variable
+        " To ALWAYS use the clipboard for ALL operations (instead of  interacting with the '+' and/or '*' registers explicitly)
+        " 让unnamed寄存器(") 一直point to 加号寄存器
+            " 缺点: 导致vim内粘贴 跟远程传到本地 似的, 很慢:
+            " set clipboard=unnamedplus  " 此处的clipboard, 搜帮助时敲 :help 'clipboard' (因为它是一个option, 不是variabel, 也不是feature名
+            " set clipboard=unnamedplus,unnamed
+                                        " 这会给 * 寄存器也复制一份
+            set clipboard^=unnamed,unnamedplus
+                        " ^= 表示prepend,  += 表示append  (对于string是这样)
+                        " 在linux, windows和mac的behavior一致
+        else
+            set clipboard=unnamed
+                    "  让unnamed寄存器一直point to星号寄存器
+        endif
+
+            " 敲"+yy等, 确实会创建目录:
+            " let g:clipboard = {
+            "                 \ 'name': 'xsel-remote',
+            "                 \ 'copy': {
+            "                 \   '+': 'mkdir -p /home/wf/.t/cccccccccccccccccccc加',
+            "                 \   '*': 'mkdir -p /home/wf/.t/cccccccccccccccccccc星',
+            "                 \  },
+            "                 \ 'paste': {
+            "                 \   '+': 'mkdir -p /home/wf/.t/pppppppppppppppppppppp加',
+            "                 \   '*': 'mkdir -p /home/wf/.t/pppppppppppppppppppppp星',
+            "                 \ },
+            "                 \ 'cache_enabled': 1,
+            "                 \}
+            "
+            "
+            "
+            " let g:clipboard = {
+            "     \   'name': 'myClipboard',
+            "     \   'copy': {
+            "     \      '+': ['tmux', 'load-buffer', '-'],
+            "     \      '*': ['tmux', 'load-buffer', '-'],器
+
+            " let g:clipboard = {
+            "     \   'name': 'myClipboard',
+            "     \   'copy': {
+            "     \      '+': ['tmux', 'load-buffer', '-'],
+            "     \      '*': ['tmux', 'load-buffer', '-'],
+
+            "     \    },
+            "     \   'paste': {
+            "     \      '+': ['tmux', 'save-buffer', '-'],
+            "     \      '*': ['tmux', 'save-buffer', '-'],
+            "     \   },
+            "     \   'cache_enabled': 1,
+            "     \ }
+            " let g:clipboard = {
+            " \ 'name': 'wf_xclip',
+            " \ 'copy': {
+            " \   '+': ['xclip', '-selection', 'clipboard', '-silent', '-loop', '2'],
+            " \   '*': ['xclip', '-selection', 'primary', '-silent', '-loop', '2'],
+            " \  },
+            " \ 'paste': {
+            " \   '+': 'xclip -selection clipboard -out',
+            " \   '*': 'xclip -selection primary  -out',
+            " \ },
+            " \ 'cache_enabled': 1,
+            " \}
+            " 这样不行
+            "     '*': 'echom "wf_paste" ; xclip -selection primary  -out',
+            " https://stackoverflow.com/a/67229362/14972148
+            "
+            "
+    " v:register	The name of the register in effect for the current normal mode command
+        " v:register 取值情况:
+                "  1. if 'clipboard' contains "unnamed" :
+                "          echo v:register  输出* (星号)
+                "  2. if 'clipboard' contains "unnamedplus":
+                "          echo v:register  输出+ (加号)
+                "  3. if none is supplied:
+                "         echo v:register  输出" (双引号,  default register)
+                "
+                "
+                "
+                "
+            " xsel:
+
+                    " --input            -i  | read standard input into the selection
+                    " --clipboard        -b  | operate on the CLIPBOARD selection
+                    " --primary          -p  | operate on the PRIMARY selection (default)
+                    " --secondary        -s  | operate on the SECONDARY selection
+
+            " xclip
+                    " xclip reads text from standard input or files and makes it available to
+                    " other X applications for pasting as an X selection (traditionally with the middle  mouse  button).
+
+                    " The default action is to silently  wait  in  the  background  for `X selection requests (pastes)`
+                    " until another X application places data in the clipboard, at which point xclip exits silently.
+                    " You can use  the -verbose option to see if and when xclip actually receives
+                    " selection requests from other X applications. (TUI的貌似不算)
+
+                            " -selection
+                            "      specify which X selection to use,
+                            "      options are:
+                            "         "primary" to use XA_PRIMARY (default),
+                            "         "secondary" for XA_SECONDARY or
+                            "         "clipboard"  for XA_CLIPBOARD 这几个大写单词, 半天没搜到出处
+
+
+
+
+statusline
+        " set statusline=
+        " set statusline=%7*=%r
+        " set statusline=%=%t                            " tittle
+        " set statusline+=%=\ buffer号:%n\            "buffer number
+        " set statusline+=%=%m                         "modified flag
+        " " set statusline+=%=文件格式:%{&ff}            "是否unix
+        " " flag[Preview] ??
+        " set statusline+=%=\ %h
+        " set statusline+=%=\ %w
+        " set statusline+=%=\ %k
+        " set statusline+=%=\ %q
+        " set statusline+=%999X
+        " " set statusline+=
+        " set statusline+=%=第%l行/
+        " set statusline+=%L行               "total lines
+        " set statusline+=(%p%%)
+        " set statusline+=%=第%v列         "virtual column number (screen column)
+        " " set statusline+=\ %c           " Column number (byte index).
+
+        " set statusline+=%2*\ %y\                                  "FileType
+        " set statusline+=%3*\ %{''.(&fenc!=''?&fenc:&enc).''}      "Encoding
+        " set statusline+=%3*\ %{(&bomb?\",BOM\":\"\")}\            "Encoding2
+        "
+        "
+        "
+        "
+        "
+        "
+        "
+        "
+        "
+        "
+autocmd
+
+
+
+        " 关于window/buffer/tab的enter和leave
+        " read file into the buffer  >  BufRead/BufReadPost > processing modelines > BufWinEnter
+
+        " BufEnter
+                " After entering a buffer.
+                        " After |BufAdd|.
+                        " After |BufReadPost|.
+                        "
+            Useful for setting  options for a file type.  Also executed when  starting to edit a buffer.
+
+
+        " BufWinEnter
+                " After a buffer is displayed in a window.
+                " This  may be when the buffer is loaded (after  processing modelines) or
+                " when a hidden buffer  is displayed (and is no longer hidden).
+先进后出:
+WinEnter > TabNew > TabEnter	>  BufEnter > TabNewEntered
+                                   BufLeave > WinLeave > TabLeave
+
+BufAdd > BUfEnter
+
+BufAdd		 buffer list里有新名字
+
+BufWritePost > BufUnload > BufDelete
+                            buffer list里少了一个名字
+
+BufWinLeave	> a buffer is removed from a window.
+			  BufUnload, BufHidden.
+
+
+BufEnter			After entering a buffer.
+				After |BufAdd|.
+				After |BufReadPost|.
+
+BufFilePost			After changing the name of the current buffer
+				with the ":file" or ":saveas" command.
+
+BufFilePre			Before changing the name of the current buffer
+				with the ":file" or ":saveas" command.
+
+BufHidden
+
+BufLeave		Before leaving to another buffer.
+
+BufModifiedSet			After the `'modified'` value of a buffer has
+				been changed.
+
+							*BufNew*
+BufNew			Just after creating a new buffer (改名也算 新buffer)
+
+BufNewFile			When starting to edit a file that doesn't  file.
+
+read file into the buffer  >  BufRead/BufReadPost > processing modelines > BufWinEnter
+
+
+BufReadCmd			Before starting to edit a new buffer.  Should
+				read the file into the buffer
+
+BufReadPre > reading the file into the buffer.
+
+
+" 好复杂, 不完善, 别深究:https://vi.stackexchange.com/a/36593/38936
+
+							*BufWipeout*
+BufWipeout			Before completely deleting a buffer.  The
+
+BufWrite/BufWritePre	Before writing the whole buffer to a file.
+
+BufWriteCmd			    Before writing the whole buffer to a file(和上面的区别是?)
+
+BufWritePost
+
+
+TermOpen > TermEnter
+TermClose > TermLeave
+
+TermOpen			When a |terminal| job is starting.
+TermLeave			After leaving |Terminal-mode|.
+TermClose			When a |terminal| job ends.
+
+
+    " 改了不生效：
+        " func! MyTab()
+        "     let label = ''
+        "     let bufnrlist = tabpagebuflist(v:lnum)
+        "                                 " tab page number for 'guitablabel'
+        "                                 "
+        "     " Add '+' if one of the buffers in the tab page is modified
+        "         for bufnr in bufnrlist
+        "             if getbufvar(bufnr, "&modified")
+        "                 let label = '+'
+        "                 break
+        "             endif
+        "         endfor
+        "
+        "     if label != ''
+        "         let label .= ' '
+        "     endif
+        "
+        "     " Append the buffer name
+        "     return label . bufname(bufnrlist[tabpagewinnr(v:lnum) - 1])
+        " endfunc
+
+        " set tabline=%!MyTab()
+        " 笔记:
+        "
+            "     N for number
+            "     S for string
+            "     F for flags as described below
+            "     - not applicable
+            "
+            " item  meaning ~
+            " f S   Path to the file in the buffer, as typed or relative to current  directory.
+            " F S   Full path to the file in the buffer.
+            " t S   File name (tail) of file in the buffer.
+            " m F   Modified flag, text is "[+]"; "[-]" if 'modifiable' is off.
+            " M F   Modified flag, text is ",+" or ",-".
+            " r F   Readonly flag, text is "[RO]".
+            " R F   Readonly flag, text is ",RO".
+            " h F   Help buffer flag, text is "[help]".
+            " H F   Help buffer flag, text is ",HLP".
+            " w F   Preview window flag, text is "[Preview]".
+            " W F   Preview window flag, text is ",PRV".
+            " y F   Type of file in the buffer, e.g., "[vim]".  See 'filetype'.
+            " Y F   Type of file in the buffer, e.g., ",VIM".  See 'filetype'.
+            " q S   "[Quickfix List]", "[Location List]" or empty.
+            " k S   Value of "b:keymap_name" or 'keymap' when |:lmap| mappings are
+            "       being used: "<keymap>"
+            " n N   Buffer number.
+            " b N   Value of character under cursor.
+            " B N   As above, in hexadecimal.
+            " o N   Byte number in file of byte under cursor, first byte is 1.
+            "       Mnemonic: Offset from start of file (with one added)
+            " O N   As above, in hexadecimal.
+            " N N   Printer page number.  (Only works in the 'printheader' option.)
+            " l N   Line number.
+            " L N   Number of lines in buffer.
+            " c N   Column number (byte index).
+            " v N   Virtual column number (screen column).
+            " V N   Virtual column number as -{num}.  Not displayed if equal to 'c'.
+            " p N   Percentage through file in lines as in |CTRL-G|.
+            " P S   Percentage through file of displayed window.  This is like the
+            "       percentage described for 'ruler'.  Always 3 in length, unless
+            "       translated.
+            " a S   Argument list status as in default title.  ({current} of {max})
+            "       Empty if the argument file count is zero or one.
+            " { NF  Evaluate expression between '%{' and '}' and substitute result.
+            "       Note that there is no '%' before the closing '}'.  The
+            "       expression cannot contain a '}' character, call a function to
+            "       work around that.  See |stl-%{| below.
+            " {% -  This is almost same as { except the result of the expression is
+            "       re-evaluated as a statusline format string.  Thus if the
+            "       return value of expr contains % items they will get expanded.
+            "       The expression can contain the } character, the end of
+            "       expression is denoted by %}.
+
+" tab样式
+func! Tabline()
+    let style = ''
+    for i in range(tabpagenr('$'))
+        let tab = i + 1
+        let winnr = tabpagewinnr(tab)
+        let buflist = tabpagebuflist(tab)
+        let bufnr = buflist[winnr - 1]
+        let file_name = bufname(bufnr)
+        let bufmodified = getbufvar(bufnr, "&mod")
+
+        let style .= '%' . tab . 'T'
+        let style .= (tab == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
+        let style .= ' ' . tab .'.'
+        if  file_name =~ "term:"
+                    " =~   regexp matches (zsh里也是这样 不是~=, python里用regular模块吧 )
+                    " !~   regexp doesn't match
+            " echo bufname() 显示:
+                " term://~/dotF/cfg/nvim//809801:zsh
+            let file_name = "<" . bufnr . ">"
+        endif
+        let style .= (file_name != '' ? ''. fnamemodify(file_name, ':t') . ' ' : 'No Name')
+
+        if bufmodified
+            let style .= '[+] '
+        endif
+    endfor
+
+    let style .= '%#TabLineFill#'
+    return style
+endfunc
+
+hi TabLineFill  guibg=#e0e5e3  guifg=#123456
+hi TabLineSel   guibg=#e0f6e3  guifg=#123456
+hi TabLine      guibg=#e0e5e3  guifg=#123456
+
+
+没用的设置?
+    func Map_n_()
+        if  bufname() == "[Command Line]"
+            exe 'normal  *'
+                " 还是不像一般buffer里的search下一个, 凑合着用吧, command line  window不是一般的normal mode
+                " 不行
+        else
+            exe 'normal \<Plug>(anzu-mode-n)'
+            " exe 'normal! <Plug>(is-nohl-3)<Plug>(anzu-mode-n)'
+            " exe 'normal! <Plug>(is-nohl-3)<Plug>(anzu-sharp-with-echo)'
+                        " 敲了3次n/N后取消高亮
+        endif
+    endfunc
+
+    func Map_N_()
+        if  bufname() == "[Command Line]"
+            exe 'normal  #'
+        else
+            exe 'normal \<Plug>(anzu-mode-N)'
+        endif
+    endfunc
+
+    nn n :call Map_N_()<cr>
+    nn N :call Map_N_()<cr>
+
+        " 敲了3次n/N后取消高亮
+            " nmap n <Plug>(is-nohl-3)<Plug>(anzu-mode-n)
+            " nmap N <Plug>(is-nohl-3)<Plug>(anzu-mode-N)
+                " anzu-mode导致很慢, 而且弄脏代码
+            " nmap n <Plug>(anzu-n-with-echo)
+            " nmap N <Plug>(anzu-N-with-echo)
+
+
+
+
+    func Search_no_comment()
+        if &filetype == 'vim'
+            exe 'normal msgg/\v^[^"]*'
+        elseif expand('%:t') == 'init.vim'
+            exe 'normal msgg/\v^[^"]*'
+            " 防止检测filetype不准
+        elseif &filetype == 'autohotkey'
+            " vim的某个文件已经设置了:  au BufNewFile,BufRead *.ahk  setf autohotkey
+            exe 'normal msgg/\v^[^;]*'
+            " todo 装个插件
+            " https://github.com/hnamikaw/vim-autohotkey
+        elseif index(['zsh', 'sh', 'python'], a:item) >= 0
+            " https://vi.stackexchange.com/a/29471/38936
+            exe 'normal msgg/\v^[^#]*'
+        elseif expand('%:t') == 'tmux.conf'
+            exe 'normal msgg/\v^[^#]*'
+        elseif index(['json', 'jsonc', 'cpp'], a:item) >= 0
+            exe 'normal msgg/\v^[^(//)]*'
+        else
+            exe 'normal msgg/\v^[^#";]*'
+                " vscode neovim无法识别filetype?
+                " 暂时一锅乱炖
+        endif
+let s:_rhs = "normal" . "msgg/\v^[^"  .
+        exe _rhs
+    endfunc
+
+        nnoremap ? :call Search_no_comment()<cr>
+
+
+
+
+" vim眼中的一个word
+    " 我的笔记 https://github.com/vim/vim/issues/576
+    " https://vi.stackexchange.com/a/36657/38936
+
+    " 先解几种常见character classes
+        " Those also work for multibyte characters:
+                " \k	keyword character (see 'iskeyword' option)
+                " \K	like "\k", but excluding digits
+
+                " \w	word character:			[0-9A-Za-z_]
+                " \W	non-word character:		[^0-9A-Za-z_]	 (搜索时  可以匹配中文等non ascii字符)
+                                                                  多个non-word character可以构成一个word!!!!
+
+
+        " An empty line  is also considered to be a word/WORD
+        "
+        " A sequence of folded lines is counted as   one word of a single character.
+        "
+        " todo:
+                " "w" and "W", "e" and "E" move to the start/end of the first word or WORD after a range of folded lines.
+                "
+                " "b" and "B" move to the start of the first word or  WORD before the fold.
+
+
+
+    " 'iskeyword' 'isk'	string (default: @,48-57,_,192-255 )  128到255是extended  ascii, 大部分是西文字母, 我们用不上
+    "                                      对应数字0到9
+        "    local to buffer
+
+        "    会影响命令a :K
+                    " [count]K
+                    "     Runs the program given by 'keywordprg' to lookup the
+                    "     |word| (defined by 'iskeyword') under or right of the
+                    "     cursor.
+                    "
+                    "     我现在:    keywordprg=:help
+
+        "     Keywords are used in searching and recognizing with many commands:
+        "           "w",
+        "           "*",
+        "           "[i",
+        "           "\k" in a |pattern|.(搜\k能匹配中文)
+        "
+        "     Q:没明白 keyword如何定义word,  word不就是由word character [0-9A-Za-z] 组成的吗?
+        "     A: 非也, set iskeyword+=- 以后, peco-find就是一个word,  但连字符不属于word character
+        "
+        "
+        "     See  'isfname' for a description of the format of this option.
+        "
+                    " The format of this option is a list of parts, separated with commas.
+                    " Each part can be a single character number or a range.  A range is two
+                    " character numbers with '-' in between.  A character number can be a
+                    " decimal number between 0 and 255 or the ASCII character itself (does
+                    " not work for digits).  Example:
+                    "     "_,-,128-140,#-43"	(include '_' and '-' and the range
+                    "                 128 to 140 and '#' to 43)
+        "     如果加了'@':
+        "         characters above 255将会:
+            "        check (其实是想表达fall back to ?) the "word"  character class
+            "                   (当作"word"  character ?)
+            "        也就是:any character  that is not white space or punctuation, )
+            "     想把中文放进'iskeyword? 暂时不行: https://github.com/vim/vim/issues/576
+            "
+
+        "     This option also influences syntax highlighting,
+        "            unless the syntax  uses |:syn-iskeyword|.
+
+                    " It is recommended when writing syntax files, to use this command to
+                    " set the correct value for the specific syntax language and not change
+                    " the 'iskeyword' option.
+                    "
+                    "
+
+if exists('$TMUX')
+    au BufReadPost,FileReadPost,BufNewFile * call system("tmux rename-window " . expand("%"))
+    au VimLeave * call system("tmux rename-window zsh")
+    " au BufEnter,FocusGained * call system("tmux rename-window " . expand("%:t"))
+    " au BufEnter * let &titlestring = ' ' . expand("%:t")
+    set title
+endif
+
+    "  快速查map
+            func! KeymaP(keys)
+                exe "verbose map "  . a:keys
+                exe "verbose map! " . a:keys
+                exe "verbose tmap " . a:keys
+
+
+                " 不好: (没有上面的那么智能)
+                    " exe "verbose nmap " . a:keys
+                    " exe "verbose omap " . a:keys
+                    " exe "verbose vmap " . a:keys
+                    " exe "verbose imap " . a:keys
+                    " exe "verbose cmap " . a:keys
+                    " exe "verbose tmap " . a:keys
+                " 不行
+                    " exe "Verbose map " . a:keys  . <Bar> . "verbose map! " . a:keys . <Bar> .  "verbose tmap " . a:keys
+            endf
+
+
+substitute后, gv有时无法选中之前的内容
+        " normal! gv
+        " subs #or\zs #\r#ge
+        " normal! gvj
+        " subs #and\zs #\r#ge
+        " normal! gvj
+        " subs #exmaple\zs #\r#ge
+
+
+
+
+
+let g:head_of_split =  '('
+    " 1.标点符号
+    let g:head_of_split .=  '('
+        let g:head_of_split .=  '(' .. '<\k+>' .. '["|'']'  .. ')'
+                                                    " 单引号里面要用单引号, 必须多写一个
+                                                    " 加这行, 避免标点符号单独成行?
+        let g:head_of_split .=  '[,;!.?:]'
+                             "  可尝试[[:punct:]]
+                                          " 中括号包裹 💦:help /collection💦
+                                          "            💦:help character-classes💦
+                                          " 里面的backslash的escape和中括号外不同:
+                                                " \e      <Esc>
+                                                " \t      <Tab>
+                                                " \r      <CR>    (NOT end-of-line!)
+                                                " \b      <BS>
+                                                " \n      line break, see above |/[\n]|
+                                                "
+                                                " \d123   decimal number of character
+                                                " \o40    octal number of character up to 0o377
+                                                " \x20    hexadecimal number of character up to 0xff
+                                                "
+                                                " \u20AC  hex. number of multibyte character up to 0xffff
+                                                " \U1234  hex. number of multibyte character up to 0xffffffff
+        " let g:head_of_split .=  '[.!?][])"]*($|[ ])'
+                                 " [])"]: 这几个中的任意一个:
+                                 "         ] 💛它一定要紧跟最前面的[💛
+                                 "         "
+                                 "         )
+
+                        " 来自:  /home/linuxbrew/.linuxbrew/Cellar/neovim/0.6.1/share/nvim/runtime/doc/pattern.txt
+                        " A search pattern that finds the end of a sentence,
+                        " with almost the same definition as the ")" command.
+
+                        " 成对单引号里面用单引号, 用敲2个单引号?
+                        " let g:head_of_split .=  '[.!?][])"'']*($|[ ])'
+                    "
+                    " <\k+>处理 : I am before a 标点符号.
+                            " 双引号处理: I am before a "标点符号".
+    let g:head_of_split .=  ')'
+    let g:head_of_split .=  '|'
+
+    " 2. 常见划分意群的词
+    " let g:head_of_split .=  '('
+        " 避免 这种情况下会切得很碎: a word, which
+    let g:head_of_split .=  '\w ('
+        let g:head_of_split .=  '<or>|'
+        let g:head_of_split .=  ' <which>|'
+        let g:head_of_split .=  '<and>|'
+        let g:head_of_split .=  '<so that>|'
+        let g:head_of_split .=  '<by>|'
+                                 " 如何排除<by default> ?
+        let g:head_of_split .=  '<or not>|'
+        let g:head_of_split .=  '<is composed of>|'
+        let g:head_of_split .=  '<of this is that>|'
+        let g:head_of_split .=  '<evaluated to>|'
+        let g:head_of_split .=  'there are cases where|'
+        let g:head_of_split .=  'example'
+    let g:head_of_split .=  ')'
+let g:head_of_split .=  ')'
+
+let  g:end_of_split =  g:head_of_split
+
+" let g:split_me =  '\v' .. g:head_of_split ..  '\zs' .. ' ' .. '\ze' .. '.{5,}' ..  g:end_of_split  导致断句的地方太少
+let g:split_me =  '\v' .. g:head_of_split ..  '\zs' .. ' ' .. '\ze' .. '.{5,}'
+
+        " subs |\t| |ge    "  导致出错 (perl里面可以用竖线作为delimeter?)
+                           " You can use most characters, but not an alphanumeric character, '\', '"' or  '|'.
+
+
+
+    " hi CursorLine guibg=rice_white_wf gui=undercurl
+    " syn match underscore "_"
+    " hi underscore gui=reverse
+    "
+        " au BufRead * if !exists('g:ReloadinG')  | set foldenable foldmethod=indent   | normal! zM  | let b:folded = 1  | endif
+                                    " :normal
+                                    " This command cannot be followed by another command, 不能用bar
+
+" 关于空格 空白符
+"  [:graph:]   isgraph   ASCII printable characters excluding  space
+" [:space:]      [:space:]         whitespace characters: space, tab, CR,
+"                                 NL, vertical tab, form feed
+" |/\s|    \s    \s    whitespace character: <Space> and <Tab>
+" \r    matches <CR>
+" \b    matches <BS>
+" \n    matches an end-of-line
+
+
+
+
+        " formatexpr: local to buffer
+        " 所以修改init.vim等文件 保存并reload后, 其他正在编辑的文件的formatexpr不变, 要在那个文件里reload一次
+        " 但 One_sentence_per_line改了后, 其他正在编辑的文件 能马上感受到,不用reload
+        "
+        "
+        "
+
+        nnor <silent> <M-p> vipJ:silent! call Split_line()<cr>vip
+                                silent没用, 要加e:  sub #某某#某某某#ge
+
+
+        "  敲ss想退出文件时, 会触发这个autocmd, 先别加startinsert
+                                                                " 这些都不行:
+        " au BufWritePost ~/dotF/cfg/nvim/*.vim  call ReloaD() | startinsert!
+        " au BufWritePost ~/dotF/cfg/nvim/*.vim  call ReloaD() | startinsert | stopinsert
+        " au BufWritePost ~/dotF/cfg/nvim/*.vim  call ReloaD() | startinsert! | normal! b
+
+
+"关于ftplugin
+    " au AG BufEnter * if &ft == 'help' | call Help_opts() | endif
+    " au AG BufRead  * if &ft == 'help' | call Help_opts() |  echom 'bufRead' . &ft .'  bufnum是' . bufnr() | endif
+    " au AG BufAdd  *  if &ft == 'help' | call Help_opts() |  echom 'bufAdd ____________ ' . &ft .'  bufnum是' . bufnr() | endif
+                   " 如果ft没变, autocmd会被就的&ft误导?
+                                                        " 为啥ftplugin里没生效?
+                                                        " 应该不是没生效, 而是没进入help这类filetype
+    " todo
+    " 试一下这样?
+    " au AG BufAdd  *.txt  if &ft == 'help' | call Help_opts() |  echom 'bufAdd ____________ ' . &ft .'  bufnum是' . bufnr() | endif
+
+
+" man和help等buffer公用
+    func! g:TOC_leo()
+        wincmd L
+        vertical resize -20
+        set modifiable
+        exec 'normal! ggVGgu'
+                    " 全部小写
+        silent % subs #\.\s*\w#\=toupper(submatch(0))#ge
+        "                                       " e: 没配对到时 不报error
+        "   "\=toupper(submatch(0)) 等价于它?        \U&#g
+        silent % subs #\(^\|\s\s\+\)\w#\=toupper(submatch(0))#ge
+         " 更多subs的例子
+         " : s/^/\=  line(".") .  ". "                 /g
+         "       \=后的作为一个expr, 大部分空格是多余的
+         "     submatch(0): 匹配到的所有对象
+        silent % subs #\*##ge
+        silent %retab | set expandtab
+        " silent % subs #\*\zs\w\+\ze\*#=submatch(0)#ge
+        " 扔掉vim的Toc的星号
+    endf
+
+
+
+
+
+split / one_sentence_per_line
+        " let g:split_after =  '\v' .. g:stop_after ..  '\zs' .. ' ' .. '\ze' .. '.{5,}' ..  g:end_of_split
+                                                                                            " 导致断句的地方太少
+                                                                                           " todo: 如何限制配对到的pattern隔开一定距离?
+        " let g:split_after =  '\v' .. g:stop_after ..  '\zs' .. ' ' .. '\ze' .. '.{2,}'   导致断得太碎, 比如: by default被断开
+        " let g:split_after =  '\v' .. g:stop_after ..  '\zs' .. ' ' .. '\ze' .. '.{9,}'
+                                                                                    " 这里\ze看到的是断句前的, 所以断句后 断句处还是只剩很少字符
+                                                                                    " 如何每选中一次文本, 只断一次, 下次重新选中未处理的?
+待翻阅:                                                                                    "
+func! ReloaD()
+        " mapclear  | mapclear <buffer>
+                " 导致easymotion的map用不了  leaderF等的map还在
+        " mapclear! | mapclear! <buffer>
+            " 会把插件里的map也清掉  这行导致coc出bug
+            " https://stackoverflow.com/questions/21945038/resetting-all-key-maps-in-vim
+
+        " todo: 如何只清理我定义的autocmd和map 以及func ?
+        "
+            " 这堆: 导致reload后 很多map无法使用.
+            " 因为zsh下敲nvim 启动时, 读完init.vim, 还要读runtimepath下的文件等
+                    " mapclear
+                        " Clear previous mappings, they don't go away automatically when sourcing vimrc
+
+                    " mapclear清理normal visual operation mode的
+                    " mapclear!清理insert\ command mode
+                    " mapclear | mapclear <buffer> | mapclear! | mapclear! <buffer> | au!
+                        " 会导致Cocrefresh啥的不行 (要在source init.vim前清理掉?)
+                        " 应该是au! 清掉了插件的autocmd
+
+            " function!  这个不是清除所有函数
+            " delfunction Your_function_name
+                " delfunction .*  " 不能通配?
+        " echo '重新加载init.vim, 记得手动保存其他 修改过的init系列的文件, 不然新配置无法生效'
+
+        "
+        "这行的存在 会导致很多问题
+            " au AG SourceCmd  * echom 'source Cmd'
+            "
+            " Most of the time ColorScheme event is the only one actually used event
+            " that may be launched on resourcing vimrc
+               " (SourcePre and  SourceCmd are also omitted without nesting,
+                " but I almost never see them used;
+                " except for SourceCmd commands for {proto}:// pseudo-protocols and
+                " (possibly compressed) vimball files).
+
+        " let g:do_not_change_fold = 'reloading, do not change fold'
+              " 暂时没用上
+
+        " todo: 如何清理掉所有的b:var ?
+        " 清掉后 还能用插件?
+        " unlet b:
+        " unlet g:
+        messages clear
+        source $MYVIMRC
+        lua require('my_cfg')
+        set nohlsearch
+        " source <sfile>
+                " 在script里, <sfile>会expand为本文件
+                " 但现在是在函数里,    expand为💦function ReloaD💦
+                    " || Error detected while processing function
+                    " init.vim|56| ReloaD[23]
+                    " || E484: Can't open file function ReloaD
+
+            " todo: 只source改过的文件?
+            " 有时出现: reload时没报错的地方, 在重启nvim时报错 (reload时报错了,只是我没看到? 或者reload时遇到错误就跳过?)
+        redraw!
+        source /home/wf/dotF/cfg/nvim/autoload/man.vim
+        " unlet g:do_not_change_fold
+    endf
+
+
+au AG BufWritePost
+    \ ~/dotF/cfg/nvim/coc-settings.json
+    \ ++nested
+    \ CocRestart
+
+    " 旧的reload系列:
+        " \  call ReloaD() | startinsert | stopinsert
+                            " 动一下光标, 展开折叠
+
+        " resourcing vimrc时, 要加nested
+        " https://github.com/powerline/powerline/commit/5173246a939f1a665d1908c536be6f04e6717ef1
+
+        " au AG BufWritePost ~/dotF/cfg/nvim/*.vim  call ReloaD() | delfunction Reload | stopinsert
+                                                  " 导致:
+                                                  "  Error detected while processing BufWritePost Autocommands for "/home/wf/dotF/cfg/nvim/*.vim":
+                                                  "  E130: Unknown function: Reload
+
+        " au AG BufWritePost ~/dotF/cfg/nvim/*.vim  if &buftype == 'terminal' |  setlocal statusline=%9*-\ -\  | endif
+                                                " 不行....statusline应该在读init.vim前确定的
+
+            " 不生效
+            " When resourcing vimrc: always use autocmd-nested  因为au执行时 会又遇到au
+
+    " au AG BufWritePost
+    "     \ *.vim,*.lua
+    "       "\ 两个文件pattern之间不能有空格:
+    "     \ ++nested
+    "     \ Runtime
+
+            " Runtime : 如果当前文件位于'runtime', unlet g:loaded_某某后 source它
+            " 然后call ReloaD(),  会source没改的文件,导致慢
+
+
+" 空格/ tab
+    " nnore <silent> ts :call T2F()<CR>
+    "     func! T2F()  " tab to space
+    "         " echom '在visual mode用时, 缩进数似乎与选中行数成指数关系, 超出屏幕范围会卡死'
+    "
+    "         set expandtab
+    "         retab! 4
+    "         echom "Tab变成4空格"
+    "
+    "         " todo:
+    "             " exec '% subs#' .. '\v^\s*\zs\t' .. '#    #ge'
+    "             " echom "用:substitute  把除了文字夹着的tab 以外的tab 变成4空格"
+    "     endf
+    "
+    "     " au AG BufRead *.py  exe ":call T2F()"
+    "     " autocmd对neovim-vscode无效？
+    "
+    "     " 需要时再手动敲, 不然就算没实质改动时 也记入undo history
+    "
+    "
+    " nnore <silent> tf :call D2F()<CR>
+    "              " ts:tab to space
+    "              " tf:double to four
+    "
+    "     func! D2F()
+    "         " Double to Four
+    "         " '在visual mode用时, 缩进数似乎与选中行数成指数关系, 超出屏幕范围会卡死'
+    "
+    "         set noexpandtab
+    "         retab! 2
+    "         " 容易导致中间的空白对不齐
+    "
+    "         call T2F()
+    "         endf
+    "
+    " func! F2T()
+    "     echom "4个空格 变成tab"
+    "     set noexpandtab  tabstop=4
+    "     %retab!
+    " endf
+    "
+    " " nno <F10> :call Indent_wf()<CR>
+    " " ino <F10> <ESC>:call Indent_wf()<CR>i
+
+
+
+
+
+
+    "        echo Very_magiC('\m-hi.*\<lucy\>' )
+    "  去掉开头的\v-
+    "        echo Very_magiC('\m-\(hi.*lucy\)' )[3:]
+    "        echo Very_magiC('\m-' .. expand('<cword>')  )[3:]
+    "        echo Very_magiC('\m-' .. @" ) [3:]
+    "     vnor <leader>r y:let @" = '/v' .. Very_magiC('v', '\m-' .. @" )[4:]<cr><esc>:echom @"<cr>
+    "     vnor <leader>r y:let @" =  Very_magiC('\m-' .. @" )[4:]<cr><esc>:echom @"<cr>
+
+
+/home/wf/dotF/cfg/nvim/clipboard_regis.vim
+            "遇到很多问题:
+                " 1. 能粘贴到本地, 但:register里无法显示加号和星号寄存器. 不能既传到本地, 又存在vim?
+                " 3. ditto明明禁止了windows terminal, 但有时还是能复制进去
+                " 4. :register显示*寄存器有内容, 但无法<ctrl-r>粘贴到vim (此时敲:register +  不显示加号寄存器, :register *  又没有内容)
+                " `<c-r> +`后, 能插入内容, 再次操作, 则不行
+            " let g:clipboard = {
+            "     \   'name': 'myClipboard',
+            "     \   'copy': {
+            "     \      '+': 'xclip -selection clipboard -in -silent -loops 2',
+            "     \      '*': 'xclip -selection clipboard -in -silent -loops 2',
+            "     \    },
+            "     \   'paste': {
+            "     \      '+': 'xclip -selection clipboard -out',
+            "     \      '*': 'xclip -selection clipboard -out',
+            "     \   },
+            "     \   'cache_enabled': 1,
+            "     \ }
+
+            " 放弃了, 还是用鼠标选中吧
+            " ditto里, ctrl tab粘贴一次后, 粘贴板的内容就失踪了.
+            " windows粘贴板里ctrl v, 同理
+
+            " 改了vim配置, 要重开VcXsr 才生效
+            " 更新: windows粘贴板里ctrl v, 又可以无限粘贴了... 因为开了  'cache_enabled': 1  ?
+      "       Or 因为它?
+          "       set clipboard=unnamedplus
+          "
+          "   不知道什么时候记的:
+            " 有时报错 can not open display啥的. 有时又正常, 哪怕在用windows terminal, 且没开xming'
+    " au AG BufEnter  term://*   normal! iechom 'hi'
+    "       " 每次进terminal都新开一个zsh? 失败了, 而且有点疯狂, 算了
+    " BufAdd 会导致新开terminal时, 影响其他buffer? 先扔掉
+    " 一定要离开terminal再进入,才生效, 加了BufNewFile,BufReadPost,BufNew都不行
+    "  abd刚进入nvim时(进入terminal mode), 这个au不生效
+    "  解决: 这里加一堆 -c 代替无法实现的au
+            "  abduco -A ${1:-s_wf} nvim -c 'terminal' -c 'startinsert'
+
+
+                " syn match In_Double_quotE   contains=Double_quotE          '\v^\s*[^:]{-}\zs"[^"]{1,40}"'
+                                                                                      " 排除掉冒号开头的, 避免高亮命令里的string
+                        " syn match In_Double_quotE   contains=Double_quotE    '\v"[-_a-zA-Z0-9'"*+/:%#=[\]<>.,]+"'
+                        " syn match In_Double_quotE   contains=Double_quotE    '"\v[^(  )"]{2,60}"' 想排除连续2个空格
+                        " syn match In_Double_quotE   contains=Double_quotE    '"\v[^(  )(:echo )"]{6,60}"'
+                                                                                        " 想排除掉命令里的string, 但用错了, collection里的group
+                                                                                        " 不是这么表示的
+                                                                                        " 但连续2个空格可以这么表示?
+
+    " toggle virtualedit:  其实不用toggle? 一直按上面那行设就行? 先放着吧
+        " let s:ve_all = 0
+        " func! Virtual_edit()
+        "     if s:ve_all == 0
+        "         " set virtualedit=insert,block
+        "         set virtualedit=all
+        "         set virtualedit?
+        "         let s:ve_all = 1
+        "     else
+        "         set virtualedit=insert,block
+        "         set virtualedit?
+        "         let s:ve_all = 0
+        "     endif
+        " endf
+        " nno <Leader>ve :call Virtual_edit()<cr>
+            " let s:all否 = 0   不能用中文
+            " func! Virtual我edit()
+            " func! 光标任我行()  " 函数名不能用中文
+
+    fun! To_term_old() abort
+            let jid = getbufvar(bid, '__terminal_jid__', -1)
+
+            let g:buf_before_TerM = expand('%:p')
+            let workdir = (expand('%') == '')?  getcwd() : expand('%:p:h')
+            let @t =  'cd '..fnameescape(workdir)
+
+            if exists('g:term_namE')
+                let g:term_buF_bk = g:term_namE
+                exe "-tab drop" g:term_namE
+
+            elseif  exists('g:term_buF_bk')
+                exe "-tab drop" g:term_buF_bk
+            el
+
+                let g:term_job_iD = termopen(
+                                      \ &shell,
+                                      \ {
+                                         \ 'cwd' : '/tmp',
+                                         "\ \ 'cwd' : getcwd(),
+                                         \ 'on_stdout' : function('s:On_stdouT'),
+                                       \},
+                                    \ )
+                " terminal
+            en
+                                " 一般情况 linux下不用fnameescape也没事吧
+    endf
+
+
+verbosefile无法读取?
+    "\ nno <Leader>oo  <cmd>call Syn_stacK()<cr>
+    "\ 失败,待续
+    "\ nno <Leader>oo  <cmd>call Tmp_creatE()<cr>
+                   "\ \<cmd>call Syn_stack_herE()<cr>
+    fun! Syn_stacK()
+        call Tmp_creatE()
+        call Syn_stack_herE()
+    endf
+
+        fun! Tmp_creatE()
+            let s:f_tmp   = tempname() . '.vim'
+            "\ ✗不加这行 文件可能不存在:✗
+            "\ 非也
+            call writefile(
+                      \['asdfasdf' ],
+                      \s:f_tmp,
+                      \'',
+                  \  )
+        endf
+
+        func! Syn_stack_herE()
+            let g_name = []
+            for id in synstack( line("."), col(".") )
+                call add( g_name, synIDattr( id, "name" ) )
+            endfor
+            if len(g_name) > 0
+                "\ let ver_file     = &verbosefile
+                "\ let s:f_tmp   = '/tmp/leo_nvim_tmp.txt'
+                "\ let &verbosefile = string(s:f_tmp)
+                for _name in g_name
+                   Verbose exe 'syn list' _name
+                endfor
+
+                "\ silent! let &verbosefile = string(ver_file)
+                        "\ \ 'pedit ' . s:f_tmp . '|wincmd P'
+            el
+                echo '没高亮'
+            en
+        exe 'split' s:f_tmp
+        endf
+
+
+                    "\ exe
+                    "\     \ 'Verbose hi' _name
+                    "\                 \ ' | echo "\n\n"
+                    "\                   \ | syntax list'  _name
+                    "\ exe   'call funcS#VerBosE syntax list'  _name
+                    "\ let @a = eval( 'syntax list ' .  _name)
+                                    "\ \ '| echo "\n\n"'
+                                    "\ \ '| hi' _name
+
+                    " exe 'Verbose syntax list ' _name
+        exe 'split' s:f_tmp
+
+                " nnor <leader>f <Cmd>call Lf_cwD('')<cr>:-tab <C-R>=printf("Rg" )<CR><CR>
+                                                        " 加了-不生效
+
+    "\ let g:split_them =  '\v' . Split_After . '|' . Split_In . '|' . Split_Before
+        "\ let g:split_them =   Split_After . '|' . Split_In . '|' . Split_Before
+        " let g:split_them =   Split_After . '|(' . Split_In . ')' . '|(' . Split_Before . ')'
+                                        " 多加了¿()¿
+
+    "\ let g:split_them .= '|' . Split_Sbj . '|' . Split_CJK
+
+
+"\ " 之前的蠢方法
+        "\     " nno  ,c "cy<esc>:syn match ConCeaL "<c-r><c-w>" conceal
+        "\     "                     \ containedin=vimLineComment,vimComment
+        "\     "                     \<left><left><left><left><left><left><left><left><left><left>
+        "\
+        "\ " 隐藏后 老是想按u, 所以:
+        "\     nno  ,u :call matchdelete(a_id)<cr>
+        "\     nno  ,U :call clearmatches()<cr>
+        "\ " 隐藏后 老是想按ctrl r, 所以:
+        "\     nno  ,r :call matchdelete(a_id)<cr>
+        "\     nno  ,R :call clearmatches()<cr>
+
+
+不需要了, 在"
+这里加了:
+syn cluster vimOperGroup    contains=vimEnvvar,
+                                        \vimFunc,
+                                        \vimFuncVar,
+                                        \vimOper,
+                                        \vimOperParen,
+                                        \vimNumber,
+                                        \vimStr,
+                                        \vimType,
+                                        \vimRegister,
+                                        \vimContinue,
+                                        \vimVar,
+                                        \vimContinue,
+                                        \vimComment,
+                                        \vimLineComment,
+                                        \Vim_com_delI
+
+    "\ "\ 这个用syntax match的话, 被dict的syntax覆盖
+    "\ let g:backslash_iD = matchadd(
+    "\                         \ 'Comment',
+    "\                         \ '\v^\s*\zs' . '"\\' . '.*$',
+    "\                         \ 200,
+    "\                         \ -1,
+    "\                         \ )
+    "\ let g:backslash_iD = matchadd(
+    "\                         \ 'Conceal',
+    "\                         \ '\v^\s*\zs' . '"\\ ' . '\ze.*$',
+    "\                         \ 201,
+    "\                         \ -1,
+    "\                         \ )
+" 给windows的neovide用,
+" vide
+    " 这个之前行
+    " 不知道为啥又不行了
+    " let $nV = "C:\Users\noway\AppData\Local\nvim"
+    "
+    " 这个if能生效?
+        " if has('win32')
+            " let $nV = "C:\Users\noway\AppData\Local\nvim"
+
+        " else
+            " let $nV = $cfg_X.."/nvim"
+        " en
+
+
+
+fun! Smart_subS()
+    "\ 本来想在本函数里 一统normal和visual的map, 但失败
+        "\ let @t = @"
+        "\ 都只能显示'c', 而非normal 或visual
+            "\ echom "mode() 是: "   mode()
+            "\ echom "nvim_get_mode() 是: "   nvim_get_mode()
+        "\ if mode() == 'n'
+        "\     echom '进来n了'
+        "\     echom 'before  @f是' @f
+        "\     norm viw
+        "\     echom 'after @f是' @f
+        "\ el
+        "\     norm! `<v`>"fy
+        "\     "\ 不行:
+        "\     "\ norm! '<v'>"fy
+        "\ en
+
+    let @" = @0
+        "\ 方便敲<c-g>粘贴
+
+    if @f !~  '@'
+        return '.,$  sub  @\v@@gc'
+    el
+        if @f !~ '#'
+            return '.,$  sub  #\v##gc'
+        el
+            return '.,$  sub  /\v//gc'
+        en
+    en
+endf
+
+
+
+"\ 这版有点丑
+
+        "\ exe ' cnorea'
+        "\         \ a:_in
+        "\         \ '<c-r>=(getcmdtype() == ":" && getcmdpos()==1 ? '''.. a:_out.. ''' : '''..a:_in..''')<CR>'
+
+        " exe 'cnorea'
+        "         \ s_in
+        "         \ '<c-r>=(getcmdtype() == ":" && getcmdpos()==1 ? '''.. s_out.. ''' : '''..s_in..''')<cr>'
+        " 形如:
+            " cnorea  h <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? '-tab help' : 'h')<CR>
+                                                 "  getcmdpos==1    在输入s_in时, 仅当光标位于命令行最开头, 才变为a:_out
+

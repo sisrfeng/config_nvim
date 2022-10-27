@@ -1,0 +1,41 @@
+###########################################################################
+#                       Snippets for all filetypes                        #
+###########################################################################
+
+
+###########
+#  Folds  #
+###########
+
+snippet myfold "Fold" b
+" ${1:Title} {{{
+
+${2:Text}
+
+" }}}
+
+endsnippet
+
+
+###########
+#  Dates  #
+###########
+
+snippet timestamp "TimeStamp" !
+`date`
+endsnippet
+
+snippet ahora "Fecha" !
+`date +\%d-\%m-\%Y\ \%H:\%M:\%S`
+endsnippet
+
+snippet dia "Dia" !
+`date +\%d-\%m-\%Y`
+endsnippet
+
+snippet hora "Hora" !
+`date +\%H:\%M:\%S`
+endsnippet
+
+
+

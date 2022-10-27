@@ -1,0 +1,12 @@
+"在after/syntax/tex.vim里处理:
+"'ie'               , conceal: 1 , concealchar:'•'} ,
+"'_'                , conceal: 1 , concealchar:' '  , mathmode: 0} , ¿\_¿只是escape?
+
+" 在前面处理了cite
+'cite'              , conceal: 1 , concealchar:' '} ,
+'label'             , conceal: 1 , concealchar:'_'}  , 无法封印{arg} 用bye_tex可以
+
+
+这是啥?
+'...\+'           
+
